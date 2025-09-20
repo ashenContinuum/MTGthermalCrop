@@ -61,17 +61,17 @@
       <h2>2) Regions (percent of height)</h2>
       <div class="slider-row">
         <label>Top band height (Name+Mana) <span id="vTop" class="pill"></span></label>
-        <input id="topBand" type="range" min="3" max="20" value="11" />
+        $110$2
       </div>
       <div class="slider-row">
         <label>Art top <span id="vArtTop" class="pill"></span></label>
-        <input id="artTop" type="range" min="10" max="35" value="19" />
+        $111$2
       </div>
       <div class="slider-row">
         <label>Art bottom <span id="vArtBot" class="pill"></span></label>
-        <input id="artBot" type="range" min="45" max="70" value="58" />
+        $156$2
       </div>
-      <div class="note">Typical classic frame: Name+Mana ≈ 10–12%, Art ≈ 19% → 58%, remainder is type+rules text.</div>
+      <div class="note">Typical classic frame: Name+Mana ≈ 10–12%, Art ≈ 11% → 56%, remainder is type+rules text.</div>
 
       <h2>3) Output sizing</h2>
       <div class="grid2">
@@ -134,9 +134,9 @@
       img: null,
       srcW: 0,
       srcH: 0,
-      topPct: 11,
-      artTopPct: 19,
-      artBotPct: 58,
+      topPct: 10,
+      artTopPct: 11,
+      artBotPct: 56,
       labelWmm: 50,
       labelHmm: 80,
       dpi: 300,
@@ -221,12 +221,12 @@
 
     fitPreset.addEventListener('click', () => {
       // Classic estimates
-      topBand.value = 11; artTop.value = 19; artBot.value = 58;
+      topBand.value = 10; artTop.value = 11; artBot.value = 56;
       readControls(); drawPreviews();
     });
 
     resetBtn.addEventListener('click', () => {
-      topBand.value = 11; artTop.value = 19; artBot.value = 58;
+      topBand.value = 10; artTop.value = 11; artBot.value = 56;
       mmW.value = 50; mmH.value = 80; dpi.value = 300; rotate.value = 'no';
       readControls(); drawPreviews();
     });
@@ -308,7 +308,8 @@
         const ctx = artOut.getContext('2d');
         ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
         // Draw art covering the whole label (letterbox if needed)
-        const srcAR = artC.width / artC.height;
+        const srcCanvas = S.rotate ? rotate90cw(artC) : artC;
+        const srcAR = srcCanvas.width / srcCanvas.height;
         const dstAR = artOut.width / artOut.height;
         let dw, dh, dx, dy;
         if (srcAR > dstAR) {
@@ -318,7 +319,7 @@
           dh = artOut.height; dw = Math.round(dh * srcAR); dx = Math.round((artOut.width - dw)/2); dy = 0;
         }
         ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,artOut.width,artOut.height);
-        ctx.drawImage(artC, 0, 0, artC.width, artC.height, dx, dy, dw, dh);
+        ctx.drawImage(srcCanvas, 0, 0, srcCanvas.width, srcCanvas.height, dx, dy, dw, dh);
       }
 
       // Bottom label: stack topBandC + lowerTextC, then scale to label size
@@ -328,7 +329,8 @@
       {
         const ctx = bottomOut.getContext('2d');
         ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-        const srcAR = stackedRaw.width / stackedRaw.height;
+        const srcCanvasB = S.rotate ? rotate90cw(stackedRaw) : stackedRaw;
+        const srcAR = srcCanvasB.width / srcCanvasB.height;
         const dstAR = bottomOut.width / bottomOut.height;
         let dw, dh, dx, dy;
         if (srcAR > dstAR) {
@@ -337,12 +339,8 @@
           dh = bottomOut.height; dw = Math.round(dh * srcAR); dx = Math.round((bottomOut.width - dw)/2); dy = 0;
         }
         ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,bottomOut.width,bottomOut.height);
-        ctx.drawImage(stackedRaw, 0,0, stackedRaw.width, stackedRaw.height, dx, dy, dw, dh);
+        ctx.drawImage(srcCanvasB, 0,0, srcCanvasB.width, srcCanvasB.height, dx, dy, dw, dh);
       }
-
-      // Optional rotation
-      let artFinal = S.rotate ? rotate90cw(artOut) : artOut;
-      let bottomFinal = S.rotate ? rotate90cw(bottomOut) : bottomOut;
 
       // Draw to previews
       prevTop.width = artFinal.width; prevTop.height = artFinal.height;
@@ -358,8 +356,7 @@
       ctxTop.restore(); ctxBot.restore();
 
       // Store for export
-      S.topCanvas = artFinal; S.bottomCanvas = bottomFinal;
-      exportTop.disabled = exportBottom.disabled = !enableExport && false; // always enable after first render
+      S.topCanvas = artOut; S.bottomCanvas = bottomOut;
       exportTop.disabled = exportBottom.disabled = false;
     }
 
