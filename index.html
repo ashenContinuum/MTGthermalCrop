@@ -5,44 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MTG Proxy Splitter (2‑label)</title>
   <style>
-    :root {
-      --bg: #0f1115; --panel: #171923; --panel2:#1e2230; --text:#e6e8f0; --muted:#9aa4b2; --accent:#7aa2ff; --accent2:#4fd1c5; --warn:#f6ad55;
-    }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0; font: 14px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-      background: linear-gradient(180deg, #0b0d12, #0f1115 120%);
-      color: var(--text);
-    }
-    .wrap { display: grid; grid-template-columns: 340px 1fr; gap: 16px; padding: 16px; }
-    .panel { background: var(--panel); border: 1px solid #23283a; border-radius: 12px; padding: 14px; box-shadow: 0 6px 24px rgba(0,0,0,.25); }
-    h1 { font-size: 18px; margin: 0 0 8px; letter-spacing:.2px }
-    h2 { font-size: 14px; margin: 14px 0 8px; color: var(--muted); font-weight:600 }
-    label { display:block; margin: 8px 0 4px; color: var(--muted); }
-    input[type="number"], input[type="text"], select { width:100%; padding:8px 10px; border-radius:10px; border:1px solid #2a3045; background:var(--panel2); color:var(--text); }
-    .row { display:grid; grid-template-columns: 1fr 1fr; gap:8px }
-    .btn {
-      display:inline-flex; align-items:center; justify-content:center; gap:8px;
-      padding:10px 12px; border-radius:10px; border:1px solid #2a3045; background:#1b2030; color:var(--text);
-      cursor:pointer; user-select:none; transition: .15s ease background, .15s ease transform;
-    }
-    .btn:hover { background:#232a40 }
-    .btn:active { transform: translateY(1px) }
-    .btn.primary { background: linear-gradient(180deg, #283b73, #1f2b52); border-color:#31478e; }
-    .btn.accent { background: linear-gradient(180deg, #145f56, #0f4740); border-color:#1b7a70; }
-    .btn.warn { background: linear-gradient(180deg, #7b4a12, #5a360d); border-color:#9c6019; }
-    .muted { color: var(--muted); }
-    .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:12px }
-    .card { background: #0f1320; border:1px solid #23283a; border-radius: 12px; padding: 10px }
-    .preview-wrap { display:grid; grid-template-columns: 1fr 1fr; gap: 12px }
-    canvas { width:100%; background:#0a0c12; border-radius:10px; border:1px solid #23283a }
-    .bar { display:flex; gap:8px; flex-wrap:wrap }
-    .kbd { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; background:#0c0f19; border:1px solid #23283a; border-radius:6px; padding:2px 6px; color:#c8d0e0 }
-    .slider-row { display:grid; grid-template-columns: 1fr auto; align-items:center; gap:8px }
-    input[type="range"] { width:100% }
-    .note { font-size:12px; color:var(--muted) }
-    .pill { font-size: 11px; padding:2px 8px; border-radius:999px; background:#1e2230; border:1px solid #2a3045; color:#aab3c5 }
+    :root { --bg:#0f1115; --panel:#171923; --panel2:#1e2230; --text:#e6e8f0; --muted:#9aa4b2; --accent:#7aa2ff; --accent2:#4fd1c5; --warn:#f6ad55; }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font:14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji";background:linear-gradient(180deg,#0b0d12,#0f1115 120%);color:var(--text)}
+    .wrap{display:grid;grid-template-columns:340px 1fr;gap:16px;padding:16px}
+    .panel{background:var(--panel);border:1px solid #23283a;border-radius:12px;padding:14px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+    h1{font-size:18px;margin:0 0 8px;letter-spacing:.2px}
+    h2{font-size:14px;margin:14px 0 8px;color:var(--muted);font-weight:600}
+    label{display:block;margin:8px 0 4px;color:var(--muted)}
+    input[type=number],select{width:100%;padding:8px 10px;border-radius:10px;border:1px solid #2a3045;background:var(--panel2);color:var(--text)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid #2a3045;background:#1b2030;color:var(--text);cursor:pointer;user-select:none;transition:.15s ease background,.15s ease transform}
+    .btn:hover{background:#232a40}
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{background:linear-gradient(180deg,#283b73,#1f2b52);border-color:#31478e}
+    .btn.accent{background:linear-gradient(180deg,#145f56,#0f4740);border-color:#1b7a70}
+    .btn.warn{background:linear-gradient(180deg,#7b4a12,#5a360d);border-color:#9c6019}
+    .muted{color:var(--muted)}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .card{background:#0f1320;border:1px solid #23283a;border-radius:12px;padding:10px}
+    .preview-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    canvas{width:100%;background:#0a0c12;border-radius:10px;border:1px solid #23283a}
+    .bar{display:flex;gap:8px;flex-wrap:wrap}
+    .kbd{font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;background:#0c0f19;border:1px solid #23283a;border-radius:6px;padding:2px 6px;color:#c8d0e0}
+    .slider-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px}
+    input[type=range]{width:100%}
+    .note{font-size:12px;color:var(--muted)}
+    .pill{font-size:11px;padding:2px 8px;border-radius:999px;background:#1e2230;border:1px solid #2a3045;color:#aab3c5}
+    .chk{display:flex;align-items:center;gap:8px;margin-top:6px;color:var(--muted)}
   </style>
 </head>
 <body>
@@ -71,7 +62,8 @@
         <label>Art bottom <span id="vArtBot" class="pill"></span></label>
         <input id="artBot" type="range" min="1" max="70" value="56" />
       </div>
-      <div class="note">Typical classic frame: Name+Mana ≈ 10%, Art ≈ 11% → 56%, remainder is type+rules text.</div>
+      <label class="chk"><input id="enforce" type="checkbox" checked /> Prevent overlap (lock order & bounds)</label>
+      <div class="note">Typical classic frame: Name+Mana ≈ 10–12%, Art ≈ 11% → 56%, remainder is type+rules text.</div>
 
       <h2>3) Output sizing</h2>
       <div class="grid2">
@@ -112,41 +104,28 @@
       <div class="preview-wrap">
         <div class="card">
           <div class="bar" style="margin-bottom:6px"><strong>Art (top label)</strong></div>
-          <canvas id="prevTop" width="600" height="960"></canvas>
+          <canvas id="prevTop"></canvas>
         </div>
         <div class="card">
           <div class="bar" style="margin-bottom:6px"><strong>Text (bottom label)</strong></div>
-          <canvas id="prevBottom" width="600" height="960"></canvas>
+          <canvas id="prevBottom"></canvas>
         </div>
       </div>
 
       <h2>Guides</h2>
-      <div class="note">The colored overlays on the previews show your current slices: <span style="color:#7aa2ff">blue=art</span>, <span style="color:#f6ad55">amber=top band</span>. The lower text region is everything below the art bottom. The exported bottom label stacks <em>Top band</em> above the <em>Lower text</em>.</div>
+      <div class="note">Rotation, if enabled, is applied to the <em>image content only</em>; label size stays fixed.</div>
     </section>
   </div>
 
   <script>
-    // Utility: mm → px at DPI
-    function mmToPx(mm, dpi) { return Math.round((mm / 25.4) * dpi); }
+    // utils
+    const mmToPx = (mm,dpi)=> Math.round((mm/25.4)*dpi);
+    const el = id => document.getElementById(id);
 
-    // State
-    const S = {
-      img: null,
-      srcW: 0,
-      srcH: 0,
-      topPct: 10,
-      artTopPct: 11,
-      artBotPct: 56,
-      labelWmm: 50,
-      labelHmm: 80,
-      dpi: 300,
-      rotate: false,
-      topCanvas: null,
-      bottomCanvas: null,
-    };
+    // state
+    const S = { img:null, srcW:0, srcH:0, topPct:10, artTopPct:11, artBotPct:56, labelWmm:50, labelHmm:80, dpi:300, rotate:false, topCanvas:null, bottomCanvas:null };
 
-    // Elements
-    const el = (id) => document.getElementById(id);
+    // els
     const file = el('file');
     const topBand = el('topBand');
     const artTop = el('artTop');
@@ -154,54 +133,46 @@
     const vTop = el('vTop');
     const vArtTop = el('vArtTop');
     const vArtBot = el('vArtBot');
-
+    const enforce = el('enforce');
     const mmW = el('mmW');
     const mmH = el('mmH');
     const dpi = el('dpi');
     const rotate = el('rotate');
-
     const fitPreset = el('fitPreset');
     const resetBtn = el('reset');
     const renderBtn = el('render');
     const exportTop = el('exportTop');
     const exportBottom = el('exportBottom');
-
     const prevTop = el('prevTop');
     const prevBottom = el('prevBottom');
 
-    // Load image
-    file.addEventListener('change', (e) => {
-      const f = e.target.files && e.target.files[0];
-      if (!f) return;
+    // image load
+    file.addEventListener('change', e => {
+      const f = e.target.files && e.target.files[0]; if(!f) return;
       const img = new Image();
-      img.onload = () => {
-        S.img = img; S.srcW = img.naturalWidth; S.srcH = img.naturalHeight;
-        drawPreviews();
-      };
+      img.onload = ()=>{ S.img=img; S.srcW=img.naturalWidth; S.srcH=img.naturalHeight; drawPreviews(); };
       img.src = URL.createObjectURL(f);
     });
 
-    // Sliders → state
-    function syncLabels(){
-      vTop.textContent = S.topPct + '%';
-      vArtTop.textContent = S.artTopPct + '%';
-      vArtBot.textContent = S.artBotPct + '%';
-    }
+    // helpers
+    function syncBadges(){ vTop.textContent=S.topPct+'%'; vArtTop.textContent=S.artTopPct+'%'; vArtBot.textContent=S.artBotPct+'%'; }
 
-    function clampRanges(){
-      // Ensure: topBand <= artTop < artBot
-      if (S.topPct >= S.artTopPct) { S.artTopPct = S.topPct + 1; }
-      if (S.artTopPct >= S.artBotPct) { S.artBotPct = S.artTopPct + 1; }
-
-      // Boundaries
-      S.topPct = Math.max(3, Math.min(20, S.topPct));
-      S.artTopPct = Math.max(10, Math.min(35, S.artTopPct));
-      S.artBotPct = Math.max(45, Math.min(70, S.artBotPct));
-
-      topBand.value = S.topPct;
-      artTop.value = S.artTopPct;
-      artBot.value = S.artBotPct;
-      syncLabels();
+    function enforceOrder(){
+      if(!enforce.checked){ // only clamp to input min/max; no auto-reordering
+        const clampTo = (val, input)=> Math.max(parseInt(input.min||'0',10), Math.min(parseInt(input.max||'100',10), val));
+        S.topPct = clampTo(S.topPct, topBand);
+        S.artTopPct = clampTo(S.artTopPct, artTop);
+        S.artBotPct = clampTo(S.artBotPct, artBot);
+        topBand.value=S.topPct; artTop.value=S.artTopPct; artBot.value=S.artBotPct; syncBadges();
+        return;
+      }
+      // enforce: top <= artTop < artBot and classic bounds
+      if(S.topPct >= S.artTopPct) S.artTopPct = S.topPct + 1;
+      if(S.artTopPct >= S.artBotPct) S.artBotPct = S.artTopPct + 1;
+      S.topPct = Math.max(parseInt(topBand.min,10), Math.min(parseInt(topBand.max,10), S.topPct));
+      S.artTopPct = Math.max(parseInt(artTop.min,10), Math.min(parseInt(artTop.max,10), S.artTopPct));
+      S.artBotPct = Math.max(parseInt(artBot.min,10), Math.min(parseInt(artBot.max,10), S.artBotPct));
+      topBand.value=S.topPct; artTop.value=S.artTopPct; artBot.value=S.artBotPct; syncBadges();
     }
 
     function readControls(){
@@ -211,169 +182,68 @@
       S.labelWmm = parseFloat(mmW.value);
       S.labelHmm = parseFloat(mmH.value);
       S.dpi = parseInt(dpi.value,10);
-      S.rotate = (rotate.value === 'yes');
-      clampRanges();
+      S.rotate = (rotate.value==='yes');
+      enforceOrder();
     }
 
-    [topBand, artTop, artBot, mmW, mmH, dpi, rotate].forEach(inp => {
-      inp.addEventListener('input', () => { readControls(); drawPreviews(); });
-    });
+    [topBand,artTop,artBot,mmW,mmH,dpi,rotate,enforce].forEach(inp=>inp.addEventListener('input',()=>{ readControls(); drawPreviews(); }));
+    fitPreset.addEventListener('click',()=>{ topBand.value=10; artTop.value=11; artBot.value=56; readControls(); drawPreviews(); });
+    resetBtn.addEventListener('click',()=>{ topBand.value=10; artTop.value=11; artBot.value=56; mmW.value=50; mmH.value=80; dpi.value=300; rotate.value='no'; enforce.checked=true; readControls(); drawPreviews(); });
+    renderBtn.addEventListener('click',()=>{ readControls(); drawPreviews(true); });
 
-    fitPreset.addEventListener('click', () => {
-      // Classic estimates
-      topBand.value = 10; artTop.value = 11; artBot.value = 56;
-      readControls(); drawPreviews();
-    });
+    // canvas helpers
+    function mkCanvas(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+    function cropCanvas(srcImg,sx,sy,sw,sh){ const c=mkCanvas(Math.max(1,Math.round(sw)), Math.max(1,Math.round(sh))); const ctx=c.getContext('2d'); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high'; ctx.drawImage(srcImg,sx,sy,sw,sh,0,0,c.width,c.height); return c; }
+    function stackVertical(canvases,outW,outH){ const c=mkCanvas(outW,outH); const ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,outW,outH); const totalH=canvases.reduce((s,x)=>s+x.height,0); let y=0; canvases.forEach(cv=>{ const h=Math.round((cv.height/totalH)*outH); ctx.drawImage(cv,0,y,outW,h); y+=h; }); return c; }
+    function rotate90cw(canvas){ const c=mkCanvas(canvas.height, canvas.width); const ctx=c.getContext('2d'); ctx.translate(c.width,0); ctx.rotate(Math.PI/2); ctx.drawImage(canvas,0,0); return c; }
 
-    resetBtn.addEventListener('click', () => {
-      topBand.value = 10; artTop.value = 11; artBot.value = 56;
-      mmW.value = 50; mmH.value = 80; dpi.value = 300; rotate.value = 'no';
-      readControls(); drawPreviews();
-    });
+    // drawing
+    function drawPreviews(enableExport=false){
+      syncBadges();
 
-    renderBtn.addEventListener('click', () => { readControls(); drawPreviews(true); });
-
-    // Core logic
-    function cropCanvas(srcImg, sx, sy, sw, sh) {
-      const c = document.createElement('canvas');
-      c.width = Math.max(1, Math.round(sw)); c.height = Math.max(1, Math.round(sh));
-      const ctx = c.getContext('2d');
-      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(srcImg, sx, sy, sw, sh, 0, 0, c.width, c.height);
-      return c;
-    }
-
-    function stackVertical(canvases, outW, outH) {
-      const c = document.createElement('canvas');
-      c.width = outW; c.height = outH;
-      const ctx = c.getContext('2d');
-      ctx.fillStyle = '#fff'; ctx.fillRect(0,0,outW,outH);
-      let y = 0;
-      canvases.forEach(cv => {
-        const h = Math.round((cv.height / canvases.reduce((s,x)=>s+x.height,0)) * outH);
-        ctx.drawImage(cv, 0, y, outW, h);
-        y += h;
-      });
-      return c;
-    }
-
-    function rotate90cw(canvas) {
-      const c = document.createElement('canvas');
-      c.width = canvas.height; c.height = canvas.width;
-      const ctx = c.getContext('2d');
-      ctx.translate(c.width, 0); ctx.rotate(Math.PI/2);
-      ctx.drawImage(canvas, 0, 0);
-      return c;
-    }
-
-    function drawGuides(ctx, w, h, topPx, aTopPx, aBotPx) {
-      // Guides: art region and top band
-      ctx.save();
-      ctx.fillStyle = 'rgba(122,162,255,0.18)';
-      ctx.fillRect(0, aTopPx, w, aBotPx - aTopPx);
-      ctx.fillStyle = 'rgba(246,173,85,0.18)';
-      ctx.fillRect(0, 0, w, topPx);
-      ctx.restore();
-    }
-
-    function drawPreviews(enableExport=false) {
-      syncLabels();
-      const ctxTop = prevTop.getContext('2d');
-      const ctxBot = prevBottom.getContext('2d');
-      ctxTop.clearRect(0,0,prevTop.width,prevTop.height);
-      ctxBot.clearRect(0,0,prevBottom.width,prevBottom.height);
-
-      if (!S.img) { exportTop.disabled = true; exportBottom.disabled = true; return; }
-
-      // Calculate slices in source pixels
-      const H = S.srcH, W = S.srcW;
-      const topPx = Math.round(H * (S.topPct/100));
-      const artTopPx = Math.round(H * (S.artTopPct/100));
-      const artBotPx = Math.round(H * (S.artBotPct/100));
-      const lowerTextTopPx = artBotPx; // from art bottom to end
-
-      // Crops
-      const topBandC = cropCanvas(S.img, 0, 0, W, topPx);
-      const artC = cropCanvas(S.img, 0, artTopPx, W, artBotPx - artTopPx);
-      const lowerTextC = cropCanvas(S.img, 0, lowerTextTopPx, W, H - lowerTextTopPx);
-
-      // Build bottom label by stacking: [topBand] above [lower text]
       const labelPxW = mmToPx(S.labelWmm, S.dpi);
       const labelPxH = mmToPx(S.labelHmm, S.dpi);
+      const ctxTop = prevTop.getContext('2d');
+      const ctxBot = prevBottom.getContext('2d');
+      prevTop.width=labelPxW; prevTop.height=labelPxH; prevBottom.width=labelPxW; prevBottom.height=labelPxH;
+      ctxTop.clearRect(0,0,prevTop.width,prevTop.height); ctxBot.clearRect(0,0,prevBottom.width,prevBottom.height);
 
-      // Fit art to label size (preserve aspect by covering height)
-      const artOut = document.createElement('canvas');
-      artOut.width = labelPxW; artOut.height = labelPxH;
-      {
-        const ctx = artOut.getContext('2d');
-        ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-        // Draw art covering the whole label (letterbox if needed)
-        const srcAR = artC.width / artC.height;
-        const dstAR = artOut.width / artOut.height;
-        let dw, dh, dx, dy;
-        if (srcAR > dstAR) {
-          // source wider than dest → fit width
-          dw = artOut.width; dh = Math.round(dw / srcAR); dx = 0; dy = Math.round((artOut.height - dh)/2);
-        } else {
-          dh = artOut.height; dw = Math.round(dh * srcAR); dx = Math.round((artOut.width - dw)/2); dy = 0;
-        }
-        ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,artOut.width,artOut.height);
-        ctx.drawImage(artC, 0, 0, artC.width, artC.height, dx, dy, dw, dh);
-      }
+      if(!S.img){ exportTop.disabled=exportBottom.disabled=true; return; }
 
-      // Bottom label: stack topBandC + lowerTextC, then scale to label size
-      const stackedRaw = stackVertical([topBandC, lowerTextC], W, topBandC.height + lowerTextC.height); // keep source width
-      const bottomOut = document.createElement('canvas');
-      bottomOut.width = labelPxW; bottomOut.height = labelPxH;
-      {
-        const ctx = bottomOut.getContext('2d');
-        ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-        const srcAR = stackedRaw.width / stackedRaw.height;
-        const dstAR = bottomOut.width / bottomOut.height;
-        let dw, dh, dx, dy;
-        if (srcAR > dstAR) {
-          dw = bottomOut.width; dh = Math.round(dw / srcAR); dx = 0; dy = Math.round((bottomOut.height - dh)/2);
-        } else {
-          dh = bottomOut.height; dw = Math.round(dh * srcAR); dx = Math.round((bottomOut.width - dw)/2); dy = 0;
-        }
-        ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,bottomOut.width,bottomOut.height);
-        ctx.drawImage(stackedRaw, 0,0, stackedRaw.width, stackedRaw.height, dx, dy, dw, dh);
-      }
+      const H=S.srcH, W=S.srcW;
+      const topPx=Math.round(H*(S.topPct/100));
+      const artTopPx=Math.round(H*(S.artTopPct/100));
+      const artBotPx=Math.round(H*(S.artBotPct/100));
 
-      // Optional rotation
-      let artFinal = S.rotate ? rotate90cw(artOut) : artOut;
-      let bottomFinal = S.rotate ? rotate90cw(bottomOut) : bottomOut;
+      const topBandC=cropCanvas(S.img,0,0,W,topPx);
+      const artCraw=cropCanvas(S.img,0,artTopPx,W,artBotPx-artTopPx);
+      const lowerTextC=cropCanvas(S.img,0,artBotPx,W,H-artBotPx);
 
-      // Draw to previews
-      prevTop.width = artFinal.width; prevTop.height = artFinal.height;
-      prevBottom.width = bottomFinal.width; prevBottom.height = bottomFinal.height;
-      ctxTop.drawImage(artFinal, 0, 0);
-      ctxBot.drawImage(bottomFinal, 0, 0);
+      // rotate content (not label) if requested
+      const artSrc = S.rotate ? rotate90cw(artCraw) : artCraw;
+      const stackedRaw = stackVertical([topBandC, lowerTextC], W, topBandC.height + lowerTextC.height);
+      const bottomSrc = S.rotate ? rotate90cw(stackedRaw) : stackedRaw;
 
-      // Overlay guides from source proportions for context
-      // (Scaled to preview canvas sizes proportionally)
-      ctxTop.save(); ctxBot.save();
-      // The guides are based on the original; here, just annotate the previews with stripes near top positions.
-      // Since art preview is cropped, we'll just show a small legend strip; keep simple.
-      ctxTop.restore(); ctxBot.restore();
+      // fit into fixed label size
+      const artOut = mkCanvas(labelPxW,labelPxH);
+      { const ctx=artOut.getContext('2d'); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high'; const srcAR=artSrc.width/artSrc.height; const dstAR=artOut.width/artOut.height; let dw,dh,dx,dy; if(srcAR>dstAR){ dw=artOut.width; dh=Math.round(dw/srcAR); dx=0; dy=Math.round((artOut.height-dh)/2);} else { dh=artOut.height; dw=Math.round(dh*srcAR); dx=Math.round((artOut.width-dw)/2); dy=0;} ctx.fillStyle='#fff'; ctx.fillRect(0,0,artOut.width,artOut.height); ctx.drawImage(artSrc,0,0,artSrc.width,artSrc.height,dx,dy,dw,dh); }
 
-      // Store for export
-      S.topCanvas = artFinal; S.bottomCanvas = bottomFinal;
-      exportTop.disabled = exportBottom.disabled = !enableExport && false; // always enable after first render
-      exportTop.disabled = exportBottom.disabled = false;
+      const bottomOut = mkCanvas(labelPxW,labelPxH);
+      { const ctx=bottomOut.getContext('2d'); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high'; const srcAR=bottomSrc.width/bottomSrc.height; const dstAR=bottomOut.width/bottomOut.height; let dw,dh,dx,dy; if(srcAR>dstAR){ dw=bottomOut.width; dh=Math.round(dw/srcAR); dx=0; dy=Math.round((bottomOut.height-dh)/2);} else { dh=bottomOut.height; dw=Math.round(dh*srcAR); dx=Math.round((bottomOut.width-dw)/2); dy=0;} ctx.fillStyle='#fff'; ctx.fillRect(0,0,bottomOut.width,bottomOut.height); ctx.drawImage(bottomSrc,0,0,bottomSrc.width,bottomSrc.height,dx,dy,dw,dh); }
+
+      // previews
+      ctxTop.drawImage(artOut,0,0); ctxBot.drawImage(bottomOut,0,0);
+
+      // export buffers
+      S.topCanvas=artOut; S.bottomCanvas=bottomOut; exportTop.disabled=exportBottom.disabled=false;
     }
 
-    exportTop.addEventListener('click', () => {
-      if (!S.topCanvas) return;
-      const a = document.createElement('a'); a.download = 'proxy_label_art.png'; a.href = S.topCanvas.toDataURL('image/png'); a.click();
-    });
-    exportBottom.addEventListener('click', () => {
-      if (!S.bottomCanvas) return;
-      const a = document.createElement('a'); a.download = 'proxy_label_text.png'; a.href = S.bottomCanvas.toDataURL('image/png'); a.click();
-    });
+    // exports
+    exportTop.addEventListener('click',()=>{ if(!S.topCanvas) return; const a=document.createElement('a'); a.download='proxy_label_art.png'; a.href=S.topCanvas.toDataURL('image/png'); a.click(); });
+    exportBottom.addEventListener('click',()=>{ if(!S.bottomCanvas) return; const a=document.createElement('a'); a.download='proxy_label_text.png'; a.href=S.bottomCanvas.toDataURL('image/png'); a.click(); });
 
-    // Init
-    readControls(); syncLabels();
+    // init
+    readControls();
   </script>
 </body>
 </html>
