@@ -9,7 +9,7 @@
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;font:14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji";background:linear-gradient(180deg,#0b0d12,#0f1115 120%);color:var(--text)}
-    .wrap{display:grid;grid-template-columns:340px 1fr;gap:16px;padding:16px}
+    .wrap{display:grid;grid-template-columns:360px 1fr;gap:16px;padding:16px}
     .panel{background:var(--panel);border:1px solid #23283a;border-radius:12px;padding:14px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
     h1{font-size:18px;margin:0 0 8px;letter-spacing:.2px}
     h2{font-size:14px;margin:14px 0 8px;color:var(--muted);font-weight:600}
@@ -34,6 +34,7 @@
     .note{font-size:12px;color:var(--muted)}
     .pill{font-size:11px;padding:2px 8px;border-radius:999px;background:#1e2230;border:1px solid #2a3045;color:#aab3c5}
     .chk{display:flex;align-items:center;gap:8px;margin-top:6px;color:var(--muted)}
+    .subtle{font-size:12px;color:#9aa4b2;margin-top:4px}
   </style>
 </head>
 <body>
@@ -64,6 +65,17 @@
       </div>
       <label class="chk"><input id="enforce" type="checkbox" checked /> Prevent overlap (lock order & bounds)</label>
       <div class="note">Typical classic frame: Name+Mana ≈ 10–12%, Art ≈ 11% → 56%, remainder is type+rules text.</div>
+
+      <h2>2a) Art horizontal crop (affects <em>Art</em> label only)</h2>
+      <div class="slider-row">
+        <label>Art crop — left <span id="vArtL" class="pill"></span></label>
+        <input id="artCropL" type="range" min="0" max="45" value="0" />
+      </div>
+      <div class="slider-row">
+        <label>Art crop — right <span id="vArtR" class="pill"></span></label>
+        <input id="artCropR" type="range" min="0" max="45" value="0" />
+      </div>
+      <div class="subtle">When rotated 90° clockwise, these behave as top/bottom trims. With <em>Prevent overlap</em> on, the tool keeps at least 10% of the art width visible; turn it off to allow extreme/overlapping crops.</div>
 
       <h2>3) Output sizing</h2>
       <div class="grid2">
@@ -123,7 +135,13 @@
     const el = id => document.getElementById(id);
 
     // state
-    const S = { img:null, srcW:0, srcH:0, topPct:10, artTopPct:11, artBotPct:56, labelWmm:50, labelHmm:80, dpi:300, rotate:false, topCanvas:null, bottomCanvas:null };
+    const S = {
+      img:null, srcW:0, srcH:0,
+      topPct:10, artTopPct:11, artBotPct:56,
+      artCropL:0, artCropR:0, // percent of art width to crop
+      labelWmm:50, labelHmm:80, dpi:300, rotate:false,
+      topCanvas:null, bottomCanvas:null
+    };
 
     // els
     const file = el('file');
@@ -133,6 +151,10 @@
     const vTop = el('vTop');
     const vArtTop = el('vArtTop');
     const vArtBot = el('vArtBot');
+    const vArtL = el('vArtL');
+    const vArtR = el('vArtR');
+    const artCropL = el('artCropL');
+    const artCropR = el('artCropR');
     const enforce = el('enforce');
     const mmW = el('mmW');
     const mmH = el('mmH');
@@ -155,30 +177,54 @@
     });
 
     // helpers
-    function syncBadges(){ vTop.textContent=S.topPct+'%'; vArtTop.textContent=S.artTopPct+'%'; vArtBot.textContent=S.artBotPct+'%'; }
+    function syncBadges(){
+      vTop.textContent=S.topPct+'%';
+      vArtTop.textContent=S.artTopPct+'%';
+      vArtBot.textContent=S.artBotPct+'%';
+      vArtL.textContent=S.artCropL+'%';
+      vArtR.textContent=S.artCropR+'%';
+    }
+
+    function clampToInput(val, input){
+      return Math.max(parseInt(input.min||'0',10), Math.min(parseInt(input.max||'100',10), val));
+    }
 
     function enforceOrder(){
-      if(!enforce.checked){ // only clamp to input min/max; no auto-reordering
-        const clampTo = (val, input)=> Math.max(parseInt(input.min||'0',10), Math.min(parseInt(input.max||'100',10), val));
-        S.topPct = clampTo(S.topPct, topBand);
-        S.artTopPct = clampTo(S.artTopPct, artTop);
-        S.artBotPct = clampTo(S.artBotPct, artBot);
-        topBand.value=S.topPct; artTop.value=S.artTopPct; artBot.value=S.artBotPct; syncBadges();
+      if(!enforce.checked){
+        // only clamp to slider min/max
+        S.topPct = clampToInput(S.topPct, topBand);
+        S.artTopPct = clampToInput(S.artTopPct, artTop);
+        S.artBotPct = clampToInput(S.artBotPct, artBot);
+        S.artCropL = clampToInput(S.artCropL, artCropL);
+        S.artCropR = clampToInput(S.artCropR, artCropR);
+        topBand.value=S.topPct; artTop.value=S.artTopPct; artBot.value=S.artBotPct; artCropL.value=S.artCropL; artCropR.value=S.artCropR; syncBadges();
         return;
       }
-      // enforce: top <= artTop < artBot and classic bounds
+      // Enforced: top <= artTop < artBot; and keep at least 10% of art width after crops
       if(S.topPct >= S.artTopPct) S.artTopPct = S.topPct + 1;
       if(S.artTopPct >= S.artBotPct) S.artBotPct = S.artTopPct + 1;
-      S.topPct = Math.max(parseInt(topBand.min,10), Math.min(parseInt(topBand.max,10), S.topPct));
-      S.artTopPct = Math.max(parseInt(artTop.min,10), Math.min(parseInt(artTop.max,10), S.artTopPct));
-      S.artBotPct = Math.max(parseInt(artBot.min,10), Math.min(parseInt(artBot.max,10), S.artBotPct));
-      topBand.value=S.topPct; artTop.value=S.artTopPct; artBot.value=S.artBotPct; syncBadges();
+      S.topPct = clampToInput(S.topPct, topBand);
+      S.artTopPct = clampToInput(S.artTopPct, artTop);
+      S.artBotPct = clampToInput(S.artBotPct, artBot);
+      // For crops, ensure left+right ≤ 90 when enforcing (leave ≥10% width)
+      S.artCropL = clampToInput(S.artCropL, artCropL);
+      S.artCropR = clampToInput(S.artCropR, artCropR);
+      const sum = S.artCropL + S.artCropR;
+      if(sum > 90){
+        // scale down proportionally to fit 90
+        const scale = 90 / sum;
+        S.artCropL = Math.round(S.artCropL * scale);
+        S.artCropR = Math.round(S.artCropR * scale);
+      }
+      topBand.value=S.topPct; artTop.value=S.artTopPct; artBot.value=S.artBotPct; artCropL.value=S.artCropL; artCropR.value=S.artCropR; syncBadges();
     }
 
     function readControls(){
       S.topPct = parseInt(topBand.value,10);
       S.artTopPct = parseInt(artTop.value,10);
       S.artBotPct = parseInt(artBot.value,10);
+      S.artCropL = parseInt(artCropL.value,10);
+      S.artCropR = parseInt(artCropR.value,10);
       S.labelWmm = parseFloat(mmW.value);
       S.labelHmm = parseFloat(mmH.value);
       S.dpi = parseInt(dpi.value,10);
@@ -186,9 +232,9 @@
       enforceOrder();
     }
 
-    [topBand,artTop,artBot,mmW,mmH,dpi,rotate,enforce].forEach(inp=>inp.addEventListener('input',()=>{ readControls(); drawPreviews(); }));
-    fitPreset.addEventListener('click',()=>{ topBand.value=10; artTop.value=11; artBot.value=56; readControls(); drawPreviews(); });
-    resetBtn.addEventListener('click',()=>{ topBand.value=10; artTop.value=11; artBot.value=56; mmW.value=50; mmH.value=80; dpi.value=300; rotate.value='no'; enforce.checked=true; readControls(); drawPreviews(); });
+    [topBand,artTop,artBot,artCropL,artCropR,mmW,mmH,dpi,rotate,enforce].forEach(inp=>inp.addEventListener('input',()=>{ readControls(); drawPreviews(); }));
+    fitPreset.addEventListener('click',()=>{ topBand.value=10; artTop.value=11; artBot.value=56; artCropL.value=0; artCropR.value=0; readControls(); drawPreviews(); });
+    resetBtn.addEventListener('click',()=>{ topBand.value=10; artTop.value=11; artBot.value=56; artCropL.value=0; artCropR.value=0; mmW.value=50; mmH.value=80; dpi.value=300; rotate.value='no'; enforce.checked=true; readControls(); drawPreviews(); });
     renderBtn.addEventListener('click',()=>{ readControls(); drawPreviews(true); });
 
     // canvas helpers
@@ -216,7 +262,20 @@
       const artBotPx=Math.round(H*(S.artBotPct/100));
 
       const topBandC=cropCanvas(S.img,0,0,W,topPx);
-      const artCraw=cropCanvas(S.img,0,artTopPx,W,artBotPx-artTopPx);
+
+      // raw art slice
+      let artCraw=cropCanvas(S.img,0,artTopPx,W,artBotPx-artTopPx);
+      // apply left/right crops on art (percent of art width)
+      const aW = artCraw.width; const aH = artCraw.height;
+      let cropLpx = Math.round(aW*(S.artCropL/100));
+      let cropRpx = Math.round(aW*(S.artCropR/100));
+      // with enforce off, allow extreme values but keep at least 1px
+      if(cropLpx + cropRpx >= aW) {
+        if(enforce.checked){ const scale=(aW-1)/(cropLpx+cropRpx||1); cropLpx = Math.floor(cropLpx*scale); cropRpx = Math.floor(cropRpx*scale); }
+        else { cropRpx = Math.max(0, aW-1-cropLpx); }
+      }
+      if(cropLpx>0 || cropRpx>0){ artCraw = cropCanvas(artCraw, cropLpx, 0, aW - cropLpx - cropRpx, aH); }
+
       const lowerTextC=cropCanvas(S.img,0,artBotPx,W,H-artBotPx);
 
       // rotate content (not label) if requested
