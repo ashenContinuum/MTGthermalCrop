@@ -374,7 +374,9 @@
       }
       if(S.txtBW && txtBWPreview.value==='full') applyBWThreshold(bottomOut, S.txtBWContrast, S.txtBWThresh);
 
-      ctxTop.drawImage(artOut,0,0); ctxBot.drawImage(bottomOut,0,0);
+      // scale export canvases down into the preview canvases
+      ctxTop.drawImage(artOut, 0, 0, prevTop.width, prevTop.height);
+      ctxBot.drawImage(bottomOut, 0, 0, prevBottom.width, prevBottom.height);
       S.topCanvas=artOut; S.bottomCanvas=bottomOut; exportTop.disabled=exportBottom.disabled=false;
     }
 
