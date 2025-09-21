@@ -27,7 +27,8 @@
     .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
     .card{background:#0f1320;border:1px solid #23283a;border-radius:12px;padding:10px}
     .preview-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    canvas{width:100%;height:auto;max-height:360px;background:#0a0c12;border-radius:10px;border:1px solid #23283a}
+    /* FIXED: keep previews from stretching with layout */
+    canvas{display:block;background:#0a0c12;border-radius:10px;border:1px solid #23283a}
     .bar{display:flex;gap:8px;flex-wrap:wrap}
     .kbd{font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;background:#0c0f19;border:1px solid #23283a;border-radius:6px;padding:2px 6px;color:#c8d0e0}
     .slider-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px}
@@ -222,7 +223,6 @@
     const txtBWThresh = el('txtBWThresh');
     const txtBWPreview = el('txtBWPreview');
 
-    const artGS = el('artGS');
     const artMode = el('artMode');
     const artGSContrast = el('artGSContrast');
     const artGSThresh = el('artGSThresh');
@@ -279,13 +279,13 @@
       S.dpi = parseInt(dpi.value,10);
       S.rotate = (rotate.value==='yes');
       S.txtBW = txtBW.checked; S.txtBWContrast = parseInt(txtBWContrast.value,10); S.txtBWThresh = parseInt(txtBWThresh.value,10);
-      S.artGS = artGS.checked; S.artMode = artMode.value; S.artGSContrast = parseInt(artGSContrast.value,10); S.artGSThresh = parseInt(artGSThresh.value,10);
+      S.artMode = artMode.value; S.artGSContrast = parseInt(artGSContrast.value,10); S.artGSThresh = parseInt(artGSThresh.value,10);
       enforceOrder();
     }
 
-    [topBand,artTop,artBot,artCropL,artCropR,mmW,mmH,dpi,rotate,enforce,txtBW,txtBWContrast,txtBWThresh,txtBWPreview,artGS,artMode,artGSContrast,artGSThresh,artGSPreview].forEach(inp=>inp.addEventListener('input',()=>{ readControls(); drawPreviews(); }));
+    [topBand,artTop,artBot,artCropL,artCropR,mmW,mmH,dpi,rotate,enforce,txtBW,txtBWContrast,txtBWThresh,txtBWPreview,artMode,artGSContrast,artGSThresh,artGSPreview].forEach(inp=>inp.addEventListener('input',()=>{ readControls(); drawPreviews(); }));
     fitPreset.addEventListener('click',()=>{ topBand.value=10; artTop.value=11; artBot.value=56; artCropL.value=0; artCropR.value=0; readControls(); drawPreviews(); });
-    resetBtn.addEventListener('click',()=>{ topBand.value=10; artTop.value=11; artBot.value=56; artCropL.value=0; artCropR.value=0; mmW.value=50; mmH.value=80; dpi.value=300; rotate.value='no'; enforce.checked=true; txtBW.checked=false; artGS.checked=true; txtBWContrast.value=0; txtBWThresh.value=160; artGSContrast.value=0; artGSThresh.value=128; readControls(); drawPreviews(); });
+    resetBtn.addEventListener('click',()=>{ topBand.value=10; artTop.value=11; artBot.value=56; artCropL.value=0; artCropR.value=0; mmW.value=50; mmH.value=80; dpi.value=300; rotate.value='no'; enforce.checked=true; txtBW.checked=false; artGSContrast.value=0; artGSThresh.value=128; readControls(); drawPreviews(); });
     renderBtn.addEventListener('click',()=>{ readControls(); drawPreviews(true); });
 
     // canvas helpers
@@ -334,13 +334,21 @@
       syncBadges();
       const labelPxW = mmToPx(S.labelWmm, S.dpi); const labelPxH = mmToPx(S.labelHmm, S.dpi);
       const ctxTop = prevTop.getContext('2d'); const ctxBot = prevBottom.getContext('2d');
-      // Set smaller preview canvases (keeps UI compact) while exporting full-res
-      const prevMax = 360; // px max dimension for preview height
-      const aspect = labelPxW / labelPxH;
-      let pW = Math.round(prevMax * aspect);
-      let pH = prevMax;
-      prevTop.width=labelPxW; prevTop.height=labelPxH; prevBottom.width=labelPxW; prevBottom.height=labelPxH;
-      ctxTop.clearRect(0,0,prevTop.width,prevTop.height); ctxBot.clearRect(0,0,prevBottom.width,prevBottom.height);
+
+      // PREVIEW SIZING: lock canvas intrinsic + CSS size so it never stretches with window
+      const prevMaxH = 360; // px max preview height
+      const aspect = labelPxW / labelPxH; // label aspect ratio
+      const pH = prevMaxH;                 // preview height
+      const pW = Math.round(pH * aspect);  // preview width
+
+      // set preview canvas size (intrinsic)
+      prevTop.width = pW;   prevTop.height = pH;
+      prevBottom.width = pW; prevBottom.height = pH;
+      // lock CSS size to match intrinsic
+      prevTop.style.width = pW + 'px';     prevTop.style.height = pH + 'px';
+      prevBottom.style.width = pW + 'px';  prevBottom.style.height = pH + 'px';
+
+      ctxTop.clearRect(0,0,pW,pH); ctxBot.clearRect(0,0,pW,pH);
 
       if(!S.img){ exportTop.disabled=exportBottom.disabled=true; return; }
 
@@ -361,6 +369,7 @@
       const stackedRaw = stackVertical([topBandC, lowerTextC], W, topBandC.height + lowerTextC.height);
       const bottomSrc = S.rotate ? rotate90cw(stackedRaw) : stackedRaw;
 
+      // build export canvases at full resolution
       const artOut = mkCanvas(labelPxW,labelPxH);
       { const ctx=artOut.getContext('2d'); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high'; const srcAR=artSrc.width/artSrc.height; const dstAR=artOut.width/artOut.height; let dw,dh,dx,dy; if(srcAR>dstAR){ dw=artOut.width; dh=Math.round(dw/srcAR); dx=0; dy=Math.round((artOut.height-dh)/2);} else { dh=artOut.height; dw=Math.round(dh*srcAR); dx=Math.round((artOut.width-dw)/2); dy=0;} ctx.fillStyle='#fff'; ctx.fillRect(0,0,artOut.width,artOut.height); ctx.drawImage(artSrc,0,0,artSrc.width,artSrc.height,dx,dy,dw,dh); }
 
@@ -368,15 +377,16 @@
       { const ctx=bottomOut.getContext('2d'); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high'; const srcAR=bottomSrc.width/bottomSrc.height; const dstAR=bottomOut.width/bottomOut.height; let dw,dh,dx,dy; if(srcAR>dstAR){ dw=bottomOut.width; dh=Math.round(dw/srcAR); dx=0; dy=Math.round((bottomOut.height-dh)/2);} else { dh=bottomOut.height; dw=Math.round(dh*srcAR); dx=Math.round((bottomOut.width-dw)/2); dy=0;} ctx.fillStyle='#fff'; ctx.fillRect(0,0,bottomOut.width,bottomOut.height); ctx.drawImage(bottomSrc,0,0,bottomSrc.width,bottomSrc.height,dx,dy,dw,dh); }
 
       // processing
-      if(S.artGS && artGSPreview.value==='full'){
-        if(S.artMode==='dither') applyFSDither(artOut, S.artGSContrast, S.artGSThresh);
-        else applyGrayscale(artOut, S.artGSContrast);
+      if(artGSPreview.value==='full'){
+        if(artMode.value==='dither') applyFSDither(artOut, artGSContrast.value|0, artGSThresh.value|0);
+        else applyGrayscale(artOut, artGSContrast.value|0);
       }
-      if(S.txtBW && txtBWPreview.value==='full') applyBWThreshold(bottomOut, S.txtBWContrast, S.txtBWThresh);
+      if(txtBWPreview.value==='full' && txtBW.checked) applyBWThreshold(bottomOut, txtBWContrast.value|0, txtBWThresh.value|0);
 
-      // scale export canvases down into the preview canvases
-      ctxTop.drawImage(artOut, 0, 0, prevTop.width, prevTop.height);
-      ctxBot.drawImage(bottomOut, 0, 0, prevBottom.width, prevBottom.height);
+      // draw scaled exports into fixed-size previews
+      ctxTop.drawImage(artOut, 0, 0, pW, pH);
+      ctxBot.drawImage(bottomOut, 0, 0, pW, pH);
+
       S.topCanvas=artOut; S.bottomCanvas=bottomOut; exportTop.disabled=exportBottom.disabled=false;
     }
 
@@ -385,6 +395,7 @@
     exportBottom.addEventListener('click',()=>{ if(!S.bottomCanvas) return; const a=document.createElement('a'); a.download='proxy_label_text.png'; a.href=S.bottomCanvas.toDataURL('image/png'); a.click(); });
 
     // init
+    // set badges and first draw
     readControls();
   </script>
 </body>
