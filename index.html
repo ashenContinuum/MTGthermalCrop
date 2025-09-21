@@ -339,7 +339,7 @@
       const aspect = labelPxW / labelPxH;
       let pW = Math.round(prevMax * aspect);
       let pH = prevMax;
-      prevTop.width=pW; prevTop.height=pH; prevBottom.width=pW; prevBottom.height=pH;
+      prevTop.width=labelPxW; prevTop.height=labelPxH; prevBottom.width=labelPxW; prevBottom.height=labelPxH;
       ctxTop.clearRect(0,0,prevTop.width,prevTop.height); ctxBot.clearRect(0,0,prevBottom.width,prevBottom.height);
 
       if(!S.img){ exportTop.disabled=exportBottom.disabled=true; return; }
