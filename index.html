@@ -9,7 +9,7 @@
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;font:14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji";background:linear-gradient(180deg,#0b0d12,#0f1115 120%);color:var(--text)}
-    .wrap{display:grid;grid-template-columns:380px 1fr;gap:16px;padding:16px}
+    .wrap{display:grid;grid-template-columns:360px 1fr;gap:16px;padding:16px}
     .panel{background:var(--panel);border:1px solid #23283a;border-radius:12px;padding:14px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
     h1{font-size:18px;margin:0 0 8px;letter-spacing:.2px}
     h2{font-size:14px;margin:14px 0 8px;color:var(--muted);font-weight:600}
@@ -24,11 +24,9 @@
     .btn.warn{background:linear-gradient(180deg,#7b4a12,#5a360d);border-color:#9c6019}
     .muted{color:var(--muted)}
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
     .card{background:#0f1320;border:1px solid #23283a;border-radius:12px;padding:10px}
     .preview-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    /* FIXED: keep previews from stretching with layout */
-    canvas{display:block;background:#0a0c12;border-radius:10px;border:1px solid #23283a}
+    canvas{width:100%;background:#0a0c12;border-radius:10px;border:1px solid #23283a}
     .bar{display:flex;gap:8px;flex-wrap:wrap}
     .kbd{font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;background:#0c0f19;border:1px solid #23283a;border-radius:6px;padding:2px 6px;color:#c8d0e0}
     .slider-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px}
@@ -43,13 +41,13 @@
   <div class="wrap">
     <section class="panel">
       <h1>MTG Proxy Splitter <span class="pill">two‑label</span></h1>
-      <p class="muted">Split a card image into <em>Art</em> (top label) and <em>Text</em> (bottom label). The tool relocates the <strong>Name + Mana</strong> band above the lower text block. Rotation is applied to image content only.</p>
+      <p class="muted">Split a card image into <em>Art</em> (top label) and <em>Text</em> (bottom label). The tool also relocates the <strong>Name + Mana Cost</strong> band from the top to directly above the lower text block. Outputs two PNGs. Rotation optional (90° clockwise).</p>
 
       <h2>1) Source image</h2>
       <input id="file" type="file" accept="image/*" />
       <div class="row" style="margin-top:8px">
         <button id="fitPreset" class="btn">Auto preset: Classic frame</button>
-        <button id="reset" class="btn warn">Reset</button>
+        <button id="reset" class="btn warn">Reset sliders</button>
       </div>
 
       <h2>2) Regions (percent of height)</h2>
@@ -66,9 +64,9 @@
         <input id="artBot" type="range" min="1" max="70" value="56" />
       </div>
       <label class="chk"><input id="enforce" type="checkbox" checked /> Prevent overlap (lock order & bounds)</label>
-      <div class="note">Typical classic frame: Name+Mana ≈ 10–12%, Art ≈ 11% → 56%.</div>
+      <div class="note">Typical classic frame: Name+Mana ≈ 10–12%, Art ≈ 11% → 56%, remainder is type+rules text.</div>
 
-      <h2>2a) Art horizontal crop</h2>
+      <h2>2a) Art horizontal crop (affects <em>Art</em> label only)</h2>
       <div class="slider-row">
         <label>Art crop — left <span id="vArtL" class="pill"></span></label>
         <input id="artCropL" type="range" min="0" max="45" value="0" />
@@ -77,7 +75,7 @@
         <label>Art crop — right <span id="vArtR" class="pill"></span></label>
         <input id="artCropR" type="range" min="0" max="45" value="0" />
       </div>
-      <div class="subtle">When rotated 90° clockwise, these behave as top/bottom trims.</div>
+      <div class="subtle">When rotated 90° clockwise, these behave as top/bottom trims. With <em>Prevent overlap</em> on, the tool keeps at least 10% of the art width visible; turn it off to allow extreme/overlapping crops.</div>
 
       <h2>3) Output sizing</h2>
       <div class="grid2">
@@ -92,7 +90,7 @@
       </div>
       <div class="grid2" style="margin-top:8px">
         <div>
-          <label>Export DPI</label>
+          <label>Export DPI (for pixel sizing)</label>
           <input id="dpi" type="number" min="72" max="600" step="1" value="300" />
         </div>
         <div>
@@ -104,64 +102,13 @@
         </div>
       </div>
 
-      <h2>3a) Output processing</h2>
-      <div class="card" style="margin-bottom:10px">
-        <strong>Text label (bottom)</strong>
-        <div class="chk"><input id="txtBW" type="checkbox" /> Black &amp; White (threshold)</div>
-        <div class="grid3" style="margin-top:6px">
-          <div>
-            <label>Contrast (−100..100)</label>
-            <input id="txtBWContrast" type="range" min="-100" max="100" value="0" />
-          </div>
-          <div>
-            <label>Threshold (0..255)</label>
-            <input id="txtBWThresh" type="range" min="0" max="255" value="160" />
-          </div>
-          <div>
-            <label>Preview</label>
-            <select id="txtBWPreview">
-              <option value="full" selected>Full</option>
-              <option value="none">Off</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <strong>Art label (top)</strong>
-        <div class="grid3" style="margin-top:6px">
-          <div class="chk" style="grid-column:1 / span 3">
-            <label style="margin:0">Mode</label>
-            <select id="artMode" style="width:100%">
-              <option value="dither" selected>Floyd–Steinberg dither</option>
-              <option value="grayscale">Plain grayscale</option>
-            </select>
-          </div>
-          <div>
-            <label>Contrast (−100..100)</label>
-            <input id="artGSContrast" type="range" min="-100" max="100" value="0" />
-          </div>
-          <div>
-            <label>Dither threshold (0..255)</label>
-            <input id="artGSThresh" type="range" min="0" max="255" value="128" />
-          </div>
-          <div>
-            <label>Preview</label>
-            <select id="artGSPreview">
-              <option value="full" selected>Full</option>
-              <option value="none">Off</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
       <h2>4) Actions</h2>
       <div class="bar">
         <button id="render" class="btn primary">Render previews</button>
         <button id="exportTop" class="btn accent" disabled>Download Art label</button>
         <button id="exportBottom" class="btn accent" disabled>Download Text label</button>
       </div>
-      <p class="note" style="margin-top:8px">Tip: Hold <span class="kbd">Shift</span> while dragging sliders for finer control.</p>
+      <p class="note" style="margin-top:8px">Tip: Hold <span class="kbd">Shift</span> while dragging sliders for finer control. This tool doesn’t do grayscale/B&amp;W conversion — your printer app will handle that.</p>
     </section>
 
     <section class="panel">
@@ -178,7 +125,7 @@
       </div>
 
       <h2>Guides</h2>
-      <div class="note">Rotation applies to image content only; label size stays fixed.</div>
+      <div class="note">Rotation, if enabled, is applied to the <em>image content only</em>; label size stays fixed.</div>
     </section>
   </div>
 
@@ -191,11 +138,8 @@
     const S = {
       img:null, srcW:0, srcH:0,
       topPct:10, artTopPct:11, artBotPct:56,
-      artCropL:0, artCropR:0,
+      artCropL:0, artCropR:0, // percent of art width to crop
       labelWmm:50, labelHmm:80, dpi:300, rotate:false,
-      // processing
-      txtBW:false, txtBWContrast:0, txtBWThresh:160,
-      artGS:true, artGSContrast:0, artGSThresh:128,
       topCanvas:null, bottomCanvas:null
     };
 
@@ -207,27 +151,15 @@
     const vTop = el('vTop');
     const vArtTop = el('vArtTop');
     const vArtBot = el('vArtBot');
-    const artCropL = el('artCropL');
-    const artCropR = el('artCropR');
     const vArtL = el('vArtL');
     const vArtR = el('vArtR');
+    const artCropL = el('artCropL');
+    const artCropR = el('artCropR');
     const enforce = el('enforce');
-
     const mmW = el('mmW');
     const mmH = el('mmH');
     const dpi = el('dpi');
     const rotate = el('rotate');
-
-    const txtBW = el('txtBW');
-    const txtBWContrast = el('txtBWContrast');
-    const txtBWThresh = el('txtBWThresh');
-    const txtBWPreview = el('txtBWPreview');
-
-    const artMode = el('artMode');
-    const artGSContrast = el('artGSContrast');
-    const artGSThresh = el('artGSThresh');
-    const artGSPreview = el('artGSPreview');
-
     const fitPreset = el('fitPreset');
     const resetBtn = el('reset');
     const renderBtn = el('render');
@@ -236,7 +168,7 @@
     const prevTop = el('prevTop');
     const prevBottom = el('prevBottom');
 
-    // load image
+    // image load
     file.addEventListener('change', e => {
       const f = e.target.files && e.target.files[0]; if(!f) return;
       const img = new Image();
@@ -245,26 +177,45 @@
     });
 
     // helpers
-    function syncBadges(){ vTop.textContent=S.topPct+'%'; vArtTop.textContent=S.artTopPct+'%'; vArtBot.textContent=S.artBotPct+'%'; vArtL.textContent=S.artCropL+'%'; vArtR.textContent=S.artCropR+'%'; }
-    function clampToInput(val, input){ return Math.max(parseInt(input.min||'0',10), Math.min(parseInt(input.max||'100',10), val)); }
+    function syncBadges(){
+      vTop.textContent=S.topPct+'%';
+      vArtTop.textContent=S.artTopPct+'%';
+      vArtBot.textContent=S.artBotPct+'%';
+      vArtL.textContent=S.artCropL+'%';
+      vArtR.textContent=S.artCropR+'%';
+    }
+
+    function clampToInput(val, input){
+      return Math.max(parseInt(input.min||'0',10), Math.min(parseInt(input.max||'100',10), val));
+    }
 
     function enforceOrder(){
       if(!enforce.checked){
+        // only clamp to slider min/max
         S.topPct = clampToInput(S.topPct, topBand);
         S.artTopPct = clampToInput(S.artTopPct, artTop);
         S.artBotPct = clampToInput(S.artBotPct, artBot);
         S.artCropL = clampToInput(S.artCropL, artCropL);
         S.artCropR = clampToInput(S.artCropR, artCropR);
-        topBand.value=S.topPct; artTop.value=S.artTopPct; artBot.value=S.artBotPct; artCropL.value=S.artCropL; artCropR.value=S.artCropR; syncBadges(); return;
+        topBand.value=S.topPct; artTop.value=S.artTopPct; artBot.value=S.artBotPct; artCropL.value=S.artCropL; artCropR.value=S.artCropR; syncBadges();
+        return;
       }
+      // Enforced: top <= artTop < artBot; and keep at least 10% of art width after crops
       if(S.topPct >= S.artTopPct) S.artTopPct = S.topPct + 1;
       if(S.artTopPct >= S.artBotPct) S.artBotPct = S.artTopPct + 1;
       S.topPct = clampToInput(S.topPct, topBand);
       S.artTopPct = clampToInput(S.artTopPct, artTop);
       S.artBotPct = clampToInput(S.artBotPct, artBot);
+      // For crops, ensure left+right ≤ 90 when enforcing (leave ≥10% width)
       S.artCropL = clampToInput(S.artCropL, artCropL);
       S.artCropR = clampToInput(S.artCropR, artCropR);
-      const sum = S.artCropL + S.artCropR; if(sum > 90){ const scale = 90 / sum; S.artCropL = Math.round(S.artCropL*scale); S.artCropR = Math.round(S.artCropR*scale);}    
+      const sum = S.artCropL + S.artCropR;
+      if(sum > 90){
+        // scale down proportionally to fit 90
+        const scale = 90 / sum;
+        S.artCropL = Math.round(S.artCropL * scale);
+        S.artCropR = Math.round(S.artCropR * scale);
+      }
       topBand.value=S.topPct; artTop.value=S.artTopPct; artBot.value=S.artBotPct; artCropL.value=S.artCropL; artCropR.value=S.artCropR; syncBadges();
     }
 
@@ -278,14 +229,12 @@
       S.labelHmm = parseFloat(mmH.value);
       S.dpi = parseInt(dpi.value,10);
       S.rotate = (rotate.value==='yes');
-      S.txtBW = txtBW.checked; S.txtBWContrast = parseInt(txtBWContrast.value,10); S.txtBWThresh = parseInt(txtBWThresh.value,10);
-      S.artMode = artMode.value; S.artGSContrast = parseInt(artGSContrast.value,10); S.artGSThresh = parseInt(artGSThresh.value,10);
       enforceOrder();
     }
 
-    [topBand,artTop,artBot,artCropL,artCropR,mmW,mmH,dpi,rotate,enforce,txtBW,txtBWContrast,txtBWThresh,txtBWPreview,artMode,artGSContrast,artGSThresh,artGSPreview].forEach(inp=>inp.addEventListener('input',()=>{ readControls(); drawPreviews(); }));
+    [topBand,artTop,artBot,artCropL,artCropR,mmW,mmH,dpi,rotate,enforce].forEach(inp=>inp.addEventListener('input',()=>{ readControls(); drawPreviews(); }));
     fitPreset.addEventListener('click',()=>{ topBand.value=10; artTop.value=11; artBot.value=56; artCropL.value=0; artCropR.value=0; readControls(); drawPreviews(); });
-    resetBtn.addEventListener('click',()=>{ topBand.value=10; artTop.value=11; artBot.value=56; artCropL.value=0; artCropR.value=0; mmW.value=50; mmH.value=80; dpi.value=300; rotate.value='no'; enforce.checked=true; txtBW.checked=false; artGSContrast.value=0; artGSThresh.value=128; readControls(); drawPreviews(); });
+    resetBtn.addEventListener('click',()=>{ topBand.value=10; artTop.value=11; artBot.value=56; artCropL.value=0; artCropR.value=0; mmW.value=50; mmH.value=80; dpi.value=300; rotate.value='no'; enforce.checked=true; readControls(); drawPreviews(); });
     renderBtn.addEventListener('click',()=>{ readControls(); drawPreviews(true); });
 
     // canvas helpers
@@ -294,61 +243,16 @@
     function stackVertical(canvases,outW,outH){ const c=mkCanvas(outW,outH); const ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,outW,outH); const totalH=canvases.reduce((s,x)=>s+x.height,0); let y=0; canvases.forEach(cv=>{ const h=Math.round((cv.height/totalH)*outH); ctx.drawImage(cv,0,y,outW,h); y+=h; }); return c; }
     function rotate90cw(canvas){ const c=mkCanvas(canvas.height, canvas.width); const ctx=c.getContext('2d'); ctx.translate(c.width,0); ctx.rotate(Math.PI/2); ctx.drawImage(canvas,0,0); return c; }
 
-    // processing helpers
-    function toGrayscaleLuma(r,g,b){ return 0.2126*r + 0.7152*g + 0.0722*b; }
-    function contrastCurve(v, pct){ const c = Math.max(-100, Math.min(100, pct)); const C = (259*(c*2.55 + 255))/(255*(259 - c*2.55)); v = C*(v-128)+128; return v<0?0:v>255?255:v; }
-
-    function applyGrayscale(canvas, contrastPct){
-      const ctx=canvas.getContext('2d'); const img=ctx.getImageData(0,0,canvas.width,canvas.height); const d=img.data;
-      for(let i=0;i<d.length;i+=4){ let y=toGrayscaleLuma(d[i],d[i+1],d[i+2]); y = contrastCurve(y, contrastPct); d[i]=d[i+1]=d[i+2]=y; }
-      ctx.putImageData(img,0,0);
-    }
-
-    function applyFSDither(canvas, contrastPct, threshold){
-      const w=canvas.width,h=canvas.height; const ctx=canvas.getContext('2d'); const img=ctx.getImageData(0,0,w,h); const d=img.data;
-      const buf=new Float32Array(w*h);
-      for(let y=0,idx=0;y<h;y++){
-        for(let x=0;x<w;x++,idx+=4){ let Y=toGrayscaleLuma(d[idx],d[idx+1],d[idx+2]); Y = contrastCurve(Y,contrastPct); buf[y*w+x]=Y; }
-      }
-      const T = Math.max(0, Math.min(255, threshold|0));
-      for(let y=0;y<h;y++){
-        for(let x=0;x<w;x++){
-          const i=y*w+x; const old = buf[i]; const newVal = (old>=T)?255:0; const err = old - newVal; buf[i]=newVal;
-          if(x+1<w) buf[i+1]+=err*7/16; if(y+1<h){ if(x>0) buf[i-1+w]+=err*3/16; buf[i+w]+=err*5/16; if(x+1<w) buf[i+1+w]+=err*1/16; }
-        }
-      }
-      for(let y=0,idx=0,pi=0;y<h;y++){
-        for(let x=0;x<w;x++,idx+=4,pi++){ const v=buf[pi]>=128?255:0; d[idx]=d[idx+1]=d[idx+2]=v; d[idx+3]=255; }
-      }
-      ctx.putImageData(img,0,0);
-    }
-
-    function applyBWThreshold(canvas, contrastPct, threshold){
-      const ctx=canvas.getContext('2d'); const img=ctx.getImageData(0,0,canvas.width,canvas.height); const d=img.data; const T=Math.max(0,Math.min(255,threshold|0));
-      for(let i=0;i<d.length;i+=4){ let Y=toGrayscaleLuma(d[i],d[i+1],d[i+2]); Y = contrastCurve(Y, contrastPct); const bw=(Y>=T)?255:0; d[i]=d[i+1]=d[i+2]=bw; }
-      ctx.putImageData(img,0,0);
-    }
-
-    // main draw
+    // drawing
     function drawPreviews(enableExport=false){
       syncBadges();
-      const labelPxW = mmToPx(S.labelWmm, S.dpi); const labelPxH = mmToPx(S.labelHmm, S.dpi);
-      const ctxTop = prevTop.getContext('2d'); const ctxBot = prevBottom.getContext('2d');
 
-      // PREVIEW SIZING: lock canvas intrinsic + CSS size so it never stretches with window
-      const prevMaxH = 360; // px max preview height
-      const aspect = labelPxW / labelPxH; // label aspect ratio
-      const pH = prevMaxH;                 // preview height
-      const pW = Math.round(pH * aspect);  // preview width
-
-      // set preview canvas size (intrinsic)
-      prevTop.width = pW;   prevTop.height = pH;
-      prevBottom.width = pW; prevBottom.height = pH;
-      // lock CSS size to match intrinsic
-      prevTop.style.width = pW + 'px';     prevTop.style.height = pH + 'px';
-      prevBottom.style.width = pW + 'px';  prevBottom.style.height = pH + 'px';
-
-      ctxTop.clearRect(0,0,pW,pH); ctxBot.clearRect(0,0,pW,pH);
+      const labelPxW = mmToPx(S.labelWmm, S.dpi);
+      const labelPxH = mmToPx(S.labelHmm, S.dpi);
+      const ctxTop = prevTop.getContext('2d');
+      const ctxBot = prevBottom.getContext('2d');
+      prevTop.width=labelPxW; prevTop.height=labelPxH; prevBottom.width=labelPxW; prevBottom.height=labelPxH;
+      ctxTop.clearRect(0,0,prevTop.width,prevTop.height); ctxBot.clearRect(0,0,prevBottom.width,prevBottom.height);
 
       if(!S.img){ exportTop.disabled=exportBottom.disabled=true; return; }
 
@@ -358,35 +262,38 @@
       const artBotPx=Math.round(H*(S.artBotPct/100));
 
       const topBandC=cropCanvas(S.img,0,0,W,topPx);
+
+      // raw art slice
       let artCraw=cropCanvas(S.img,0,artTopPx,W,artBotPx-artTopPx);
-      const aW = artCraw.width, aH = artCraw.height; let cropLpx=Math.round(aW*(S.artCropL/100)), cropRpx=Math.round(aW*(S.artCropR/100));
-      if(cropLpx+cropRpx>=aW){ if(enforce.checked){ const scale=(aW-1)/(cropLpx+cropRpx||1); cropLpx=Math.floor(cropLpx*scale); cropRpx=Math.floor(cropRpx*scale);} else { cropRpx=Math.max(0,aW-1-cropLpx);} }
-      if(cropLpx>0||cropRpx>0) artCraw=cropCanvas(artCraw,cropLpx,0,aW-cropLpx-cropRpx,aH);
+      // apply left/right crops on art (percent of art width)
+      const aW = artCraw.width; const aH = artCraw.height;
+      let cropLpx = Math.round(aW*(S.artCropL/100));
+      let cropRpx = Math.round(aW*(S.artCropR/100));
+      // with enforce off, allow extreme values but keep at least 1px
+      if(cropLpx + cropRpx >= aW) {
+        if(enforce.checked){ const scale=(aW-1)/(cropLpx+cropRpx||1); cropLpx = Math.floor(cropLpx*scale); cropRpx = Math.floor(cropRpx*scale); }
+        else { cropRpx = Math.max(0, aW-1-cropLpx); }
+      }
+      if(cropLpx>0 || cropRpx>0){ artCraw = cropCanvas(artCraw, cropLpx, 0, aW - cropLpx - cropRpx, aH); }
 
       const lowerTextC=cropCanvas(S.img,0,artBotPx,W,H-artBotPx);
 
+      // rotate content (not label) if requested
       const artSrc = S.rotate ? rotate90cw(artCraw) : artCraw;
       const stackedRaw = stackVertical([topBandC, lowerTextC], W, topBandC.height + lowerTextC.height);
       const bottomSrc = S.rotate ? rotate90cw(stackedRaw) : stackedRaw;
 
-      // build export canvases at full resolution
+      // fit into fixed label size
       const artOut = mkCanvas(labelPxW,labelPxH);
       { const ctx=artOut.getContext('2d'); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high'; const srcAR=artSrc.width/artSrc.height; const dstAR=artOut.width/artOut.height; let dw,dh,dx,dy; if(srcAR>dstAR){ dw=artOut.width; dh=Math.round(dw/srcAR); dx=0; dy=Math.round((artOut.height-dh)/2);} else { dh=artOut.height; dw=Math.round(dh*srcAR); dx=Math.round((artOut.width-dw)/2); dy=0;} ctx.fillStyle='#fff'; ctx.fillRect(0,0,artOut.width,artOut.height); ctx.drawImage(artSrc,0,0,artSrc.width,artSrc.height,dx,dy,dw,dh); }
 
       const bottomOut = mkCanvas(labelPxW,labelPxH);
       { const ctx=bottomOut.getContext('2d'); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high'; const srcAR=bottomSrc.width/bottomSrc.height; const dstAR=bottomOut.width/bottomOut.height; let dw,dh,dx,dy; if(srcAR>dstAR){ dw=bottomOut.width; dh=Math.round(dw/srcAR); dx=0; dy=Math.round((bottomOut.height-dh)/2);} else { dh=bottomOut.height; dw=Math.round(dh*srcAR); dx=Math.round((bottomOut.width-dw)/2); dy=0;} ctx.fillStyle='#fff'; ctx.fillRect(0,0,bottomOut.width,bottomOut.height); ctx.drawImage(bottomSrc,0,0,bottomSrc.width,bottomSrc.height,dx,dy,dw,dh); }
 
-      // processing
-      if(artGSPreview.value==='full'){
-        if(artMode.value==='dither') applyFSDither(artOut, artGSContrast.value|0, artGSThresh.value|0);
-        else applyGrayscale(artOut, artGSContrast.value|0);
-      }
-      if(txtBWPreview.value==='full' && txtBW.checked) applyBWThreshold(bottomOut, txtBWContrast.value|0, txtBWThresh.value|0);
+      // previews
+      ctxTop.drawImage(artOut,0,0); ctxBot.drawImage(bottomOut,0,0);
 
-      // draw scaled exports into fixed-size previews
-      ctxTop.drawImage(artOut, 0, 0, pW, pH);
-      ctxBot.drawImage(bottomOut, 0, 0, pW, pH);
-
+      // export buffers
       S.topCanvas=artOut; S.bottomCanvas=bottomOut; exportTop.disabled=exportBottom.disabled=false;
     }
 
@@ -395,7 +302,6 @@
     exportBottom.addEventListener('click',()=>{ if(!S.bottomCanvas) return; const a=document.createElement('a'); a.download='proxy_label_text.png'; a.href=S.bottomCanvas.toDataURL('image/png'); a.click(); });
 
     // init
-    // set badges and first draw
     readControls();
   </script>
 </body>
