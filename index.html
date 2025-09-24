@@ -33,7 +33,7 @@
     input[type=range]{width:100%}
     .note{font-size:12px;color:var(--muted)}
     .pill{font-size:11px;padding:2px 8px;border-radius:999px;background:#1e2230;border:1px solid #2a3045;color:#aab3c5}
-    .chk{display:flex;align-items:center;gap:8px;margin-top:6px;color:var(--muted)}
+    .chk{display:flex;align-items:center;gap:8px;margin-top:6px;color:#aab3c5}
     .subtle{font-size:12px;color:#9aa4b2;margin-top:4px}
   </style>
 </head>
@@ -109,7 +109,7 @@
         <button id="exportBottom" class="btn accent" disabled>Download Text label</button>
       </div>
       <label class="chk"><input id="trimExport" type="checkbox" checked /> Trim blank white margins on export</label>
-      <p class="note" style="margin-top:8px">Tip: Hold <span class="kbd">Shift</span> while dragging sliders for finer control. This tool doesn’t do grayscale/B&amp;W conversion — your printer app will handle that.</p>" style="margin-top:8px">Tip: Hold <span class="kbd">Shift</span> while dragging sliders for finer control. This tool doesn’t do grayscale/B&amp;W conversion — your printer app will handle that.</p>
+      <p class="note" style="margin-top:8px">Tip: Hold <span class="kbd">Shift</span> while dragging sliders for finer control. This tool doesn’t do grayscale/B&amp;W conversion — your printer app will handle that.</p>
     </section>
 
     <section class="panel">
@@ -165,8 +165,8 @@
     const resetBtn = el('reset');
     const renderBtn = el('render');
     const exportTop = el('exportTop');
-    const trimExport = el('trimExport');
     const exportBottom = el('exportBottom');
+    const trimExport = el('trimExport');
     const prevTop = el('prevTop');
     const prevBottom = el('prevBottom');
 
@@ -245,6 +245,28 @@
     function stackVertical(canvases,outW,outH){ const c=mkCanvas(outW,outH); const ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,outW,outH); const totalH=canvases.reduce((s,x)=>s+x.height,0); let y=0; canvases.forEach(cv=>{ const h=Math.round((cv.height/totalH)*outH); ctx.drawImage(cv,0,y,outW,h); y+=h; }); return c; }
     function rotate90cw(canvas){ const c=mkCanvas(canvas.height, canvas.width); const ctx=c.getContext('2d'); ctx.translate(c.width,0); ctx.rotate(Math.PI/2); ctx.drawImage(canvas,0,0); return c; }
 
+    // TRIMMER (removes white margins on export only)
+    function trimWhite(canvas, tolerance=8){
+      const w=canvas.width,h=canvas.height; const ctx=canvas.getContext('2d');
+      const img=ctx.getImageData(0,0,w,h); const d=img.data; const tol=Math.max(0,Math.min(255,tolerance|0));
+      let minX=w, minY=h, maxX=-1, maxY=-1;
+      for(let y=0,idx=0;y<h;y++){
+        for(let x=0;x<w;x++,idx+=4){
+          const r=d[idx], g=d[idx+1], b=d[idx+2], a=d[idx+3];
+          const lum = 0.2126*r + 0.7152*g + 0.0722*b; // luma
+          // treat as content if not near-white OR not fully opaque (just in case)
+          if(a<250 || lum < 255 - tol){
+            if(x<minX) minX=x; if(y<minY) minY=y; if(x>maxX) maxX=x; if(y>maxY) maxY=y;
+          }
+        }
+      }
+      if(maxX<minX || maxY<minY) return canvas; // nothing to trim
+      const cw=maxX-minX+1, ch=maxY-minY+1;
+      const out=document.createElement('canvas'); out.width=cw; out.height=ch;
+      out.getContext('2d').drawImage(canvas, minX, minY, cw, ch, 0, 0, cw, ch);
+      return out;
+    }
+
     // drawing
     function drawPreviews(enableExport=false){
       syncBadges();
@@ -300,27 +322,6 @@
     }
 
     // exports
-    function trimWhite(canvas, tolerance=8){
-      const w=canvas.width,h=canvas.height; const ctx=canvas.getContext('2d');
-      const img=ctx.getImageData(0,0,w,h); const d=img.data; const tol = Math.max(0,Math.min(255,tolerance|0));
-      let minX=w, minY=h, maxX=-1, maxY=-1;
-      for(let y=0,idx=0;y<h;y++){
-        for(let x=0;x<w;x++,idx+=4){
-          const r=d[idx], g=d[idx+1], b=d[idx+2], a=d[idx+3];
-          // consider any pixel that isn't near-white (or is transparent) as content
-          const lum = 0.2126*r + 0.7152*g + 0.0722*b;
-          if(a<250 || lum < 255 - tol){
-            if(x<minX) minX=x; if(y<minY) minY=y; if(x>maxX) maxX=x; if(y>maxY) maxY=y;
-          }
-        }
-      }
-      if(maxX<minX || maxY<minY) return canvas; // nothing found
-      const cw = maxX - minX + 1, ch = maxY - minY + 1;
-      const out = document.createElement('canvas'); out.width=cw; out.height=ch;
-      out.getContext('2d').drawImage(canvas, minX, minY, cw, ch, 0, 0, cw, ch);
-      return out;
-    }
-
     exportTop.addEventListener('click',()=>{
       if(!S.topCanvas) return;
       const src = trimExport.checked ? trimWhite(S.topCanvas, 8) : S.topCanvas;
@@ -330,7 +331,7 @@
       if(!S.bottomCanvas) return;
       const src = trimExport.checked ? trimWhite(S.bottomCanvas, 8) : S.bottomCanvas;
       const a=document.createElement('a'); a.download='proxy_label_text.png'; a.href=src.toDataURL('image/png'); a.click();
-    }); a.download='proxy_label_text.png'; a.href=S.bottomCanvas.toDataURL('image/png'); a.click(); });
+    });
 
     // init
     readControls();
