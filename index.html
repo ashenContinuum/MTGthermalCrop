@@ -108,7 +108,8 @@
         <button id="exportTop" class="btn accent" disabled>Download Art label</button>
         <button id="exportBottom" class="btn accent" disabled>Download Text label</button>
       </div>
-      <p class="note" style="margin-top:8px">Tip: Hold <span class="kbd">Shift</span> while dragging sliders for finer control. This tool doesn’t do grayscale/B&amp;W conversion — your printer app will handle that.</p>
+      <label class="chk"><input id="trimExport" type="checkbox" checked /> Trim blank white margins on export</label>
+      <p class="note" style="margin-top:8px">Tip: Hold <span class="kbd">Shift</span> while dragging sliders for finer control. This tool doesn’t do grayscale/B&amp;W conversion — your printer app will handle that.</p>" style="margin-top:8px">Tip: Hold <span class="kbd">Shift</span> while dragging sliders for finer control. This tool doesn’t do grayscale/B&amp;W conversion — your printer app will handle that.</p>
     </section>
 
     <section class="panel">
@@ -164,6 +165,7 @@
     const resetBtn = el('reset');
     const renderBtn = el('render');
     const exportTop = el('exportTop');
+    const trimExport = el('trimExport');
     const exportBottom = el('exportBottom');
     const prevTop = el('prevTop');
     const prevBottom = el('prevBottom');
@@ -298,8 +300,37 @@
     }
 
     // exports
-    exportTop.addEventListener('click',()=>{ if(!S.topCanvas) return; const a=document.createElement('a'); a.download='proxy_label_art.png'; a.href=S.topCanvas.toDataURL('image/png'); a.click(); });
-    exportBottom.addEventListener('click',()=>{ if(!S.bottomCanvas) return; const a=document.createElement('a'); a.download='proxy_label_text.png'; a.href=S.bottomCanvas.toDataURL('image/png'); a.click(); });
+    function trimWhite(canvas, tolerance=8){
+      const w=canvas.width,h=canvas.height; const ctx=canvas.getContext('2d');
+      const img=ctx.getImageData(0,0,w,h); const d=img.data; const tol = Math.max(0,Math.min(255,tolerance|0));
+      let minX=w, minY=h, maxX=-1, maxY=-1;
+      for(let y=0,idx=0;y<h;y++){
+        for(let x=0;x<w;x++,idx+=4){
+          const r=d[idx], g=d[idx+1], b=d[idx+2], a=d[idx+3];
+          // consider any pixel that isn't near-white (or is transparent) as content
+          const lum = 0.2126*r + 0.7152*g + 0.0722*b;
+          if(a<250 || lum < 255 - tol){
+            if(x<minX) minX=x; if(y<minY) minY=y; if(x>maxX) maxX=x; if(y>maxY) maxY=y;
+          }
+        }
+      }
+      if(maxX<minX || maxY<minY) return canvas; // nothing found
+      const cw = maxX - minX + 1, ch = maxY - minY + 1;
+      const out = document.createElement('canvas'); out.width=cw; out.height=ch;
+      out.getContext('2d').drawImage(canvas, minX, minY, cw, ch, 0, 0, cw, ch);
+      return out;
+    }
+
+    exportTop.addEventListener('click',()=>{
+      if(!S.topCanvas) return;
+      const src = trimExport.checked ? trimWhite(S.topCanvas, 8) : S.topCanvas;
+      const a=document.createElement('a'); a.download='proxy_label_art.png'; a.href=src.toDataURL('image/png'); a.click();
+    });
+    exportBottom.addEventListener('click',()=>{
+      if(!S.bottomCanvas) return;
+      const src = trimExport.checked ? trimWhite(S.bottomCanvas, 8) : S.bottomCanvas;
+      const a=document.createElement('a'); a.download='proxy_label_text.png'; a.href=src.toDataURL('image/png'); a.click();
+    }); a.download='proxy_label_text.png'; a.href=S.bottomCanvas.toDataURL('image/png'); a.click(); });
 
     // init
     readControls();
